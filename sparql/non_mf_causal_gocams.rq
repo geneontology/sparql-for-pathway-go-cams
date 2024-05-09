@@ -1,0 +1,31 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX gomodel: <http://model.geneontology.org/>
+
+PREFIX MF: <http://purl.obolibrary.org/obo/GO_0003674>
+PREFIX BP: <http://purl.obolibrary.org/obo/GO_0008150>
+PREFIX CC: <http://purl.obolibrary.org/obo/GO_0005575>
+PREFIX PCC: <http://purl.obolibrary.org/obo/GO_0032991>
+
+PREFIX causally_upstream_of_or_within: <http://purl.obolibrary.org/obo/RO_0002418>
+
+SELECT DISTINCT ?gocam ?title ?type1 ?causal ?type2
+WHERE {
+    ?causal rdfs:subPropertyOf* causally_upstream_of_or_within: .
+    
+    GRAPH ?gocam {
+        ?ind1 ?causal ?ind2 .
+        ?ind1 a ?type1 .
+        ?ind2 a ?type2 .
+        FILTER(?type1 != owl:NamedIndividual) .
+        FILTER(?type2 != owl:NamedIndividual) .
+
+        ?gocam dc:title ?title .
+    }
+    ?ind1 rdf:type ?ind_super_type1 .
+    ?ind2 rdf:type ?ind_super_type2 .
+    FILTER ((?ind_super_type1 IN (BP:, CC:)) || (?ind_super_type2 IN (BP:, CC:))) .
+}

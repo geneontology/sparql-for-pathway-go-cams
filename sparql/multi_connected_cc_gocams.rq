@@ -1,0 +1,30 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX gomodel: <http://model.geneontology.org/>
+
+PREFIX MF: <http://purl.obolibrary.org/obo/GO_0003674>
+PREFIX BP: <http://purl.obolibrary.org/obo/GO_0008150>
+PREFIX CC: <http://purl.obolibrary.org/obo/GO_0005575>
+PREFIX PCC: <http://purl.obolibrary.org/obo/GO_0032991>
+
+SELECT ?gocam ?title (str(COUNT(?mf_ind)) as ?count) ?cc_ind ?cc_type
+WHERE {
+
+    GRAPH ?gocam {
+        ?mf_ind a ?mf_type .
+        ?cc_ind a ?cc_type .
+        ?mf_ind ?mf_prop ?cc_ind .
+        FILTER(?mf_type != owl:NamedIndividual) .
+        FILTER(?cc_type != owl:NamedIndividual) .
+
+        ?gocam dc:title ?title .
+    }
+    ?mf_ind a MF: .
+    ?cc_ind a CC: .
+    FILTER(?cc_type != PCC:) .
+}
+GROUP BY ?gocam ?title ?cc_ind ?cc_type
+HAVING (COUNT(?mf_ind) > 1)

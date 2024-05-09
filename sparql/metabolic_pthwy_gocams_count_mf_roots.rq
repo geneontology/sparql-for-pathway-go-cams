@@ -1,0 +1,96 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX gomodel: <http://model.geneontology.org/>
+PREFIX REACTO: <http://purl.obolibrary.org/obo/go/extensions/reacto.owl#>
+
+PREFIX MF: <http://purl.obolibrary.org/obo/GO_0003674>
+PREFIX BP: <http://purl.obolibrary.org/obo/GO_0008150>
+PREFIX CC: <http://purl.obolibrary.org/obo/GO_0005575>
+PREFIX PCC: <http://purl.obolibrary.org/obo/GO_0032991>
+
+PREFIX causally_upstream_of_or_within: <http://purl.obolibrary.org/obo/RO_0002418>
+PREFIX causally_upstream_of_or_within_negative_effect: <http://purl.obolibrary.org/obo/RO_0004046>
+PREFIX causally_upstream_of_or_within_positive_effect: <http://purl.obolibrary.org/obo/RO_0004047>
+
+PREFIX causally_upstream_of: <http://purl.obolibrary.org/obo/RO_0002411>
+PREFIX causally_upstream_of_negative_effect: <http://purl.obolibrary.org/obo/RO_0002305>
+PREFIX causally_upstream_of_positive_effect: <http://purl.obolibrary.org/obo/RO_0002304>
+
+PREFIX regulates: <http://purl.obolibrary.org/obo/RO_0002211>
+PREFIX negatively_regulates: <http://purl.obolibrary.org/obo/RO_0002212>
+PREFIX positively_regulates: <http://purl.obolibrary.org/obo/RO_0002213>
+
+PREFIX directly_regulates: <http://purl.obolibrary.org/obo/RO_0002578>
+PREFIX directly_positively_regulates: <http://purl.obolibrary.org/obo/RO_0002629>
+PREFIX directly_negatively_regulates: <http://purl.obolibrary.org/obo/RO_0002630>
+
+PREFIX directly_activates: <http://purl.obolibrary.org/obo/RO_0002406>
+PREFIX indirectly_activates: <http://purl.obolibrary.org/obo/RO_0002407>
+
+PREFIX directly_inhibits: <http://purl.obolibrary.org/obo/RO_0002408>
+PREFIX indirectly_inhibits: <http://purl.obolibrary.org/obo/RO_0002409>
+
+PREFIX transitively_provides_input_for: <http://purl.obolibrary.org/obo/RO_0002414>
+PREFIX immediately_causally_upstream_of: <http://purl.obolibrary.org/obo/RO_0002412>
+PREFIX directly_provides_input_for: <http://purl.obolibrary.org/obo/RO_0002413>
+
+PREFIX has_input: <http://purl.obolibrary.org/obo/RO_0002233>
+PREFIX has_output: <http://purl.obolibrary.org/obo/RO_0002234>
+PREFIX enabled_by: <http://purl.obolibrary.org/obo/RO_0002333>
+
+SELECT ?gocam (str(?title) as ?title)
+(str(COUNT(DISTINCT(?ind_root))) as ?root_mf_count)
+         (str(COUNT(DISTINCT(?ind_non_root))) as ?non_root_mf_count)
+		(GROUP_CONCAT(distinct ?contr_type1;separator=",") as ?controllers) (GROUP_CONCAT(distinct ?taxon;separator=",") as ?taxons) (GROUP_CONCAT(distinct ?taxon_label;separator=",") as ?taxon_labels) ?modelstate
+WHERE 
+{
+  VALUES ?causal { causally_upstream_of_or_within: causally_upstream_of_or_within_negative_effect: causally_upstream_of_or_within_positive_effect: 
+    causally_upstream_of: causally_upstream_of_negative_effect: causally_upstream_of_positive_effect: regulates: 				
+    negatively_regulates: positively_regulates: directly_regulates: directly_positively_regulates: directly_negatively_regulates:
+    directly_activates: indirectly_activates: directly_inhibits: indirectly_inhibits: transitively_provides_input_for: 
+    immediately_causally_upstream_of: directly_provides_input_for: }
+
+  GRAPH ?gocam {                 
+      ?gocam gomodel:graphType gomodel:noctuaCam .
+      ?ind1 has_output: ?chem_ind1 .
+      ?ind2 has_input: ?chem_ind2 .
+      # ?ind1 ?causal ?ind2 .
+      ?chem_ind1 a ?chem_type .
+      ?chem_ind2 a ?chem_type .
+      ?ind1 a ?mf_type1 .
+      ?ind2 a ?mf_type2 .
+      FILTER(?chem_type != owl:NamedIndividual) .
+      FILTER(?mf_type1 != owl:NamedIndividual) .
+      FILTER(?mf_type2 != owl:NamedIndividual) .
+  }
+  GRAPH ?gocam {
+    ?ind enabled_by: ?contr1 .
+    ?contr1 a ?contr_type1 .
+    FILTER(?contr_type1 != owl:NamedIndividual) .
+    ?gocam rdf:type owl:Ontology .
+    ?gocam <https://w3id.org/biolink/vocab/in_taxon> ?taxon .
+    ?gocam <http://geneontology.org/lego/modelstate> ?modelstate .
+    ?gocam dc:date ?date .
+    ?gocam dc:title ?title
+  }
+  GRAPH ?gocam {
+    optional { ?ind_root a MF: } .
+    ?ind_non_root a ?mf_non_root_type .
+    FILTER(?mf_non_root_type != MF:) .
+    FILTER(?mf_non_root_type != owl:NamedIndividual)
+  }
+  ?ind1 a ?ind_super_type1 .
+  ?ind2 a ?ind_super_type2 .
+  FILTER (?ind_super_type1 IN (MF:, REACTO:molecular_event) ) .
+  FILTER (?ind_super_type2 IN (MF:, REACTO:molecular_event) ) .
+  ?ind_non_root rdf:type MF: .
+  	
+  ?taxon rdfs:label ?taxon_label .
+  # FILTER(?gocam = gomodel:R-HSA-997272) .
+  # FILTER(?gocam = gomodel:61f34dd300001044) .
+}
+GROUP BY ?gocam ?title ?modelstate
+HAVING(COUNT(DISTINCT(?ind_non_root)) > COUNT(DISTINCT(?ind_root)))
