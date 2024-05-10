@@ -38,5 +38,15 @@ JAVA_OPTS := -Xmx12G
 %/pathway_like_go_cams.tsv: %/pthwy_gocams_count_mf_roots.tsv %/metabolic_pthwy_gocams_count_mf_roots.tsv %/multi_connected_cc_gocams.tsv %/multi_connected_bp_gocams.tsv %/non_mf_causal_gocams.tsv
 	./scripts/compile_pathway_like_gocams.sh $*
 
-%/all: %/pathway_like_go_cams.tsv
+# NOCTUA_MODELS_PATH is the repo root
+%/cp_model_ttl_to_new_dir.touch: %/pathway_like_go_cams.tsv
+	mkdir -p $*/pathway_like_go_cams
+	./scripts/cp_model_ttl_to_new_dir.sh $< $(NOCTUA_MODELS_PATH) $*/pathway_like_go_cams
+	touch $@
+
+.PRECIOUS: %/pathway-like_go-cams.tar.gz
+%/pathway-like_go-cams.tar.gz: %/cp_model_ttl_to_new_dir.touch
+	tar -czf $@ $*/pathway_like_go_cams
+
+%/all: %/pathway_like_go_cams.tsv %/pathway-like_go-cams.tar.gz
 	@echo "Done"
