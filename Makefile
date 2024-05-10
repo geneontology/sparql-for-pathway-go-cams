@@ -17,6 +17,7 @@ JAVA_OPTS ?= -Xmx12G
 	cd $* && tar -xzf $(BLAZEGRAPH_RUNNER_TGZ)
 
 %/run_query: %/$(BLAZEGRAPH_RUNNER_DIR)/bin/blazegraph-runner
+	@if [ ! -f $(BG_JNL) ]; then echo "Error: Journal '$(BG_JNL)' does not exist"; exit 1; fi
 	JAVA_OPTS=$(JAVA_OPTS) ./$< select --journal=$(BG_JNL) --outformat=tsv $(QUERY_FILE) $(OUT_FILE)
 
 .PRECIOUS: %/pthwy_gocams_count_mf_roots.tsv
