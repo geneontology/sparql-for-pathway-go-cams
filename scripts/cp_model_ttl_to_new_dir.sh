@@ -1,3 +1,5 @@
+#!/bin/bash
+
 MODEL_LIST=$1
 NOCTUA_MODELS_DIR=$2
 DEST_DIR=$3

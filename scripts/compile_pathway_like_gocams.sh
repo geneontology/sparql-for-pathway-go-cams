@@ -1,3 +1,5 @@
+#!/bin/bash
+
 TARGET_DIR=$1
 
 rm -f $TARGET_DIR/pathway_like_gocams.tsv $TARGET_DIR/pathway_like_gocams_uniq.tsv $TARGET_DIR/pathway_like_gocams_filtered_multi_bp.tsv $TARGET_DIR/pathway_like_gocams_filtered_multi_bp_cc.tsv
