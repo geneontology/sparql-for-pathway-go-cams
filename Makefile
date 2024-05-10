@@ -19,18 +19,23 @@ JAVA_OPTS ?= -Xmx12G
 %/run_query: %/$(BLAZEGRAPH_RUNNER_DIR)/bin/blazegraph-runner
 	JAVA_OPTS=$(JAVA_OPTS) ./$< select --journal=$(BG_JNL) --outformat=tsv $(QUERY_FILE) $(OUT_FILE)
 
+.PRECIOUS: %/pthwy_gocams_count_mf_roots.tsv
 %/pthwy_gocams_count_mf_roots.tsv:
 	QUERY_FILE=sparql/pthwy_gocams_count_mf_roots.rq OUT_FILE=$@ $(MAKE) $*/run_query
 
+.PRECIOUS: %/metabolic_pthwy_gocams_count_mf_roots.tsv
 %/metabolic_pthwy_gocams_count_mf_roots.tsv:
 	QUERY_FILE=sparql/metabolic_pthwy_gocams_count_mf_roots.rq OUT_FILE=$@ $(MAKE) $*/run_query
 
+.PRECIOUS: %/multi_connected_cc_gocams.tsv
 %/multi_connected_cc_gocams.tsv:
 	QUERY_FILE=sparql/multi_connected_cc_gocams.rq OUT_FILE=$@ $(MAKE) $*/run_query
 
+.PRECIOUS: %/multi_connected_bp_gocams.tsv
 %/multi_connected_bp_gocams.tsv:
 	QUERY_FILE=sparql/multi_connected_bp_gocams.rq OUT_FILE=$@ $(MAKE) $*/run_query
 
+.PRECIOUS: %/non_mf_causal_gocams.tsv
 %/non_mf_causal_gocams.tsv:
 	QUERY_FILE=sparql/non_mf_causal_gocams.rq OUT_FILE=$@ $(MAKE) $*/run_query
 
@@ -50,3 +55,10 @@ JAVA_OPTS ?= -Xmx12G
 
 %/all: %/pathway_like_go_cams.tsv %/pathway-like_go-cams.tar.gz
 	@echo "Done"
+
+%/clean:
+	rm -f $*/pathway-like_go-cams.tar.gz
+	rm -f $*/*.touch
+	rm -f $*/*.tsv
+	rm -f $*/pathway_like_go_cams/*
+	if [ -d $*/pathway_like_go_cams ]; then rmdir $*/pathway_like_go_cams; fi
