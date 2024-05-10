@@ -1,10 +1,10 @@
 # Makefile
 
-BLAZEGRAPH_RUNNER_URL := https://github.com/balhoff/blazegraph-runner/releases/download/v1.7/blazegraph-runner-1.7.tgz
-BLAZEGRAPH_RUNNER_TGZ := blazegraph-runner-1.7.tgz
-BLAZEGRAPH_RUNNER_DIR := blazegraph-runner-1.7
-BG_JNL := blazegraph-production.jnl
-JAVA_OPTS := -Xmx12G
+BLAZEGRAPH_RUNNER_URL ?= https://github.com/balhoff/blazegraph-runner/releases/download/v1.7/blazegraph-runner-1.7.tgz
+BLAZEGRAPH_RUNNER_TGZ ?= blazegraph-runner-1.7.tgz
+BLAZEGRAPH_RUNNER_DIR ?= blazegraph-runner-1.7
+BG_JNL ?= blazegraph-production.jnl
+JAVA_OPTS ?= -Xmx12G
 
 %/$(BLAZEGRAPH_RUNNER_TGZ):
 	mkdir -p $*	
