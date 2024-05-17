@@ -52,7 +52,7 @@ JAVA_OPTS ?= -Xmx12G
 
 .PRECIOUS: %/pathway-like_go-cams.tar.gz
 %/pathway-like_go-cams.tar.gz: %/cp_model_ttl_to_new_dir.touch
-	tar -czf $@ $*/pathway_like_go_cams
+	cd $* && tar -czf pathway-like_go-cams.tar.gz pathway_like_go_cams
 
 %/all: %/pathway_like_go_cams.tsv %/pathway-like_go-cams.tar.gz
 	@echo "Done"
