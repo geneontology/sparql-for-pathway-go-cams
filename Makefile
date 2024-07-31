@@ -4,10 +4,10 @@ BLAZEGRAPH_RUNNER_URL ?= https://github.com/balhoff/blazegraph-runner/releases/d
 BLAZEGRAPH_RUNNER_TGZ ?= blazegraph-runner-1.7.tgz
 BLAZEGRAPH_RUNNER_DIR ?= blazegraph-runner-1.7
 BG_JNL ?= blazegraph-production.jnl
-JAVA_OPTS ?= -Xmx12G
+JAVA_OPTS ?= -Xmx64G
 
 %/$(BLAZEGRAPH_RUNNER_TGZ):
-	mkdir -p $*	
+	mkdir -p $*
 	@echo "Downloading blazegraph-runner..."
 	curl -L $(BLAZEGRAPH_RUNNER_URL) -o $@
 
