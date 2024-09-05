@@ -41,56 +41,72 @@ PREFIX has_input: <http://purl.obolibrary.org/obo/RO_0002233>
 PREFIX has_output: <http://purl.obolibrary.org/obo/RO_0002234>
 PREFIX enabled_by: <http://purl.obolibrary.org/obo/RO_0002333>
 
-SELECT ?gocam (str(?title) as ?title)
-(str(COUNT(DISTINCT(?ind_root))) as ?root_mf_count)
-         (str(COUNT(DISTINCT(?ind_non_root))) as ?non_root_mf_count)
-		(GROUP_CONCAT(distinct ?contr_type1;separator=",") as ?controllers) (GROUP_CONCAT(distinct ?taxon;separator=",") as ?taxons) (GROUP_CONCAT(distinct ?taxon_label;separator=",") as ?taxon_labels) ?modelstate
+SELECT ?gocam (STR(?title) as ?title) (STR(?root_mf_count_int) AS ?root_mf_count) (STR(?non_root_mf_count_int) AS ?non_root_mf_count) ?controllers ?taxons ?taxon_labels ?modelstate
 WHERE 
 {
-  VALUES ?causal { causally_upstream_of_or_within: causally_upstream_of_or_within_negative_effect: causally_upstream_of_or_within_positive_effect: 
-    causally_upstream_of: causally_upstream_of_negative_effect: causally_upstream_of_positive_effect: regulates: 				
-    negatively_regulates: positively_regulates: directly_regulates: directly_positively_regulates: directly_negatively_regulates:
-    directly_activates: indirectly_activates: directly_inhibits: indirectly_inhibits: transitively_provides_input_for: 
-    immediately_causally_upstream_of: directly_provides_input_for: }
-
-  GRAPH ?gocam {                 
+  {
+    SELECT ?gocam
+    WHERE {
       ?gocam gomodel:graphType gomodel:noctuaCam .
-      ?ind1 has_output: ?chem_ind1 .
-      ?ind2 has_input: ?chem_ind2 .
-      # ?ind1 ?causal ?ind2 .
-      ?chem_ind1 a ?chem_type .
-      ?chem_ind2 a ?chem_type .
-      ?ind1 a ?mf_type1 .
-      ?ind2 a ?mf_type2 .
-      FILTER(?chem_type != owl:NamedIndividual) .
-      FILTER(?mf_type1 != owl:NamedIndividual) .
-      FILTER(?mf_type2 != owl:NamedIndividual) .
+      GRAPH ?gocam {
+        ?ind1 has_output: ?chem_ind1 .
+        ?ind2 has_input: ?chem_ind2 .
+        ?chem_ind1 a ?chem_type .
+        ?chem_ind2 a ?chem_type .
+        FILTER(?chem_type != owl:NamedIndividual) .
+      }
+      FILTER ( EXISTS { ?ind1 a MF: } || EXISTS { ?ind1 a REACTO:molecular_event } )
+      FILTER ( EXISTS { ?ind2 a MF: } || EXISTS { ?ind2 a REACTO:molecular_event } )
+    }
   }
-  GRAPH ?gocam {
-    ?ind enabled_by: ?contr1 .
-    ?contr1 a ?contr_type1 .
-    FILTER(?contr_type1 != owl:NamedIndividual) .
-    ?gocam rdf:type owl:Ontology .
-    ?gocam <https://w3id.org/biolink/vocab/in_taxon> ?taxon .
-    ?gocam <http://geneontology.org/lego/modelstate> ?modelstate .
-    ?gocam dc:date ?date .
-    ?gocam dc:title ?title
+  {
+    SELECT ?gocam ?title ?modelstate (GROUP_CONCAT(DISTINCT ?taxon; separator=",") as ?taxons) (GROUP_CONCAT(distinct ?taxon_label;separator=",") as ?taxon_labels) 
+    WHERE {
+      ?gocam <http://geneontology.org/lego/modelstate> ?modelstate .
+      ?gocam dc:title ?title .
+      ?gocam <https://w3id.org/biolink/vocab/in_taxon> ?taxon .
+      ?taxon rdfs:label ?taxon_label .
+    }
+    GROUP BY ?gocam ?title ?modelstate
   }
-  GRAPH ?gocam {
-    optional { ?ind_root a MF: } .
-    ?ind_non_root a ?mf_non_root_type .
-    FILTER(?mf_non_root_type != MF:) .
-    FILTER(?mf_non_root_type != owl:NamedIndividual)
+  {
+    SELECT ?gocam (GROUP_CONCAT(DISTINCT ?contr_type1; separator=",") as ?controllers)
+    WHERE {
+      ?gocam gomodel:graphType gomodel:noctuaCam .
+      GRAPH ?gocam {
+        ?ind enabled_by: ?contr1 .
+        ?contr1 a ?contr_type1 .
+        FILTER(?contr_type1 != owl:NamedIndividual) .
+      }
+    }
+    GROUP BY ?gocam
   }
-  ?ind1 a ?ind_super_type1 .
-  ?ind2 a ?ind_super_type2 .
-  FILTER (?ind_super_type1 IN (MF:, REACTO:molecular_event) ) .
-  FILTER (?ind_super_type2 IN (MF:, REACTO:molecular_event) ) .
-  ?ind_non_root rdf:type MF: .
-  	
-  ?taxon rdfs:label ?taxon_label .
-  # FILTER(?gocam = gomodel:R-HSA-997272) .
-  # FILTER(?gocam = gomodel:61f34dd300001044) .
+  {
+    SELECT ?gocam (STR(COUNT(DISTINCT(?ind_non_root))) as ?non_root_mf_count_int)
+    WHERE {
+      ?gocam gomodel:graphType gomodel:noctuaCam .
+      ?ind_non_root a MF: .
+      GRAPH ?gocam {
+        ?ind_non_root a owl:NamedIndividual .
+        ?ind_non_root a ?mf_non_root_type .
+        FILTER(?mf_non_root_type != owl:NamedIndividual)
+        FILTER(?mf_non_root_type != MF:)
+      }
+    }
+    GROUP BY ?gocam
+  }
+  {
+    SELECT ?gocam (STR(COUNT(DISTINCT(?ind_root))) as ?root_mf_count_int)
+    WHERE {
+      ?gocam gomodel:graphType gomodel:noctuaCam .
+      GRAPH ?gocam {
+        OPTIONAL { 
+          ?ind_root a owl:NamedIndividual .
+          ?ind_root a MF: 
+        } 
+      }
+    }
+    GROUP BY ?gocam
+  }
+  FILTER(?non_root_mf_count_int > ?root_mf_count_int)
 }
-GROUP BY ?gocam ?title ?modelstate
-HAVING(COUNT(DISTINCT(?ind_non_root)) > COUNT(DISTINCT(?ind_root)))
