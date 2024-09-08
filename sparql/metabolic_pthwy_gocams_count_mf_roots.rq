@@ -41,7 +41,7 @@ PREFIX has_input: <http://purl.obolibrary.org/obo/RO_0002233>
 PREFIX has_output: <http://purl.obolibrary.org/obo/RO_0002234>
 PREFIX enabled_by: <http://purl.obolibrary.org/obo/RO_0002333>
 
-SELECT ?gocam (STR(?title) as ?title) (STR(?root_mf_count_int) AS ?root_mf_count) (STR(?non_root_mf_count_int) AS ?non_root_mf_count) ?controllers ?taxons ?taxon_labels ?modelstate
+SELECT DISTINCT ?gocam (STR(?titlestr) as ?title) (STR(?root_mf_count_int) AS ?root_mf_count) (STR(?non_root_mf_count_int) AS ?non_root_mf_count) ?controllers ?taxons ?taxon_labels ?modelstate
 WHERE 
 {
   {
@@ -60,14 +60,14 @@ WHERE
     }
   }
   {
-    SELECT ?gocam ?title ?modelstate (GROUP_CONCAT(DISTINCT ?taxon; separator=",") as ?taxons) (GROUP_CONCAT(distinct ?taxon_label;separator=",") as ?taxon_labels) 
+    SELECT ?gocam ?titlestr ?modelstate (GROUP_CONCAT(DISTINCT ?taxon; separator=",") as ?taxons) (GROUP_CONCAT(DISTINCT ?taxon_label;separator=",") as ?taxon_labels) 
     WHERE {
       ?gocam <http://geneontology.org/lego/modelstate> ?modelstate .
-      ?gocam dc:title ?title .
+      ?gocam dc:title ?titlestr .
       ?gocam <https://w3id.org/biolink/vocab/in_taxon> ?taxon .
       ?taxon rdfs:label ?taxon_label .
     }
-    GROUP BY ?gocam ?title ?modelstate
+    GROUP BY ?gocam ?titlestr ?modelstate
   }
   {
     SELECT ?gocam (GROUP_CONCAT(DISTINCT ?contr_type1; separator=",") as ?controllers)
@@ -82,7 +82,7 @@ WHERE
     GROUP BY ?gocam
   }
   {
-    SELECT ?gocam (STR(COUNT(DISTINCT(?ind_non_root))) as ?non_root_mf_count_int)
+    SELECT ?gocam (COUNT(DISTINCT(?ind_non_root)) as ?non_root_mf_count_int)
     WHERE {
       ?gocam gomodel:graphType gomodel:noctuaCam .
       ?ind_non_root a MF: .
@@ -96,11 +96,11 @@ WHERE
     GROUP BY ?gocam
   }
   {
-    SELECT ?gocam (STR(COUNT(DISTINCT(?ind_root))) as ?root_mf_count_int)
+    SELECT ?gocam (COALESCE(COUNT(DISTINCT(?ind_root)), 0) as ?root_mf_count_int)
     WHERE {
       ?gocam gomodel:graphType gomodel:noctuaCam .
-      GRAPH ?gocam {
-        OPTIONAL { 
+      OPTIONAL { 
+        GRAPH ?gocam {
           ?ind_root a owl:NamedIndividual .
           ?ind_root a MF: 
         } 
